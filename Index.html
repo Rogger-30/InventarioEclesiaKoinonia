@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventário</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="password"], input[type="file"], input[type="text"], textarea {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #5cb85c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #4cae4c;
+        }
+        .item {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .item img {
+            max-width: 100%;
+        }
+        .inventory-list {
+            display: none;
+            margin-top: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+        .delete-button {
+            background: #d9534f;
+        }
+        .delete-button:hover {
+            background: #c9302c;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="loginContainer">
+    <h1>Login</h1>
+    <input type="password" id="password" placeholder="Senha">
+    <button onclick="login()">Entrar</button>
+    <p id="error" style="color: red; display: none;">Senha incorreta. Tente novamente.</p>
+</div>
+
+<div class="container hidden" id="inventoryContainer">
+    <h1>Inventário</h1>
+    <input type="file" id="itemImage" accept="image/*">
+    <input type="text" id="itemName" placeholder="Nome do Item">
+    <textarea id="itemObservation" rows="4" placeholder="Observação"></textarea>
+    <button onclick="addItem()">Adicionar Item</button>
+    <button onclick="toggleInventory()">Ver Itens</button>
+
+    <div id="inventory" class="inventory-list"></div>
+</div>
+
+<script>
+    let items = JSON.parse(localStorage.getItem('inventoryItems')) || [];
+
+    function login() {
+        const passwordInput = document.getElementById('password');
+        const error = document.getElementById('error');
+        
+        if (passwordInput.value === "inventarioek") {
+            document.getElementById('loginContainer').classList.add('hidden');
+            document.getElementById('inventoryContainer').classList.remove('hidden');
+            error.style.display = 'none';
+        } else {
+            error.style.display = 'block';
+        }
+    }
+
+    function addItem() {
+        const imageInput = document.getElementById('itemImage');
+        const nameInput = document.getElementById('itemName');
+        const observationInput = document.getElementById('itemObservation');
+
+        if (imageInput.files.length === 0 || !nameInput.value) {
+            alert('Por favor, adicione uma imagem e um nome para o item.');
+            return;
+        }
+
+        const item = {
+            image: URL.createObjectURL(imageInput.files[0]),
+            name: nameInput.value,
+            observation: observationInput.value
+        };
+
+        items.push(item);
+        localStorage.setItem('inventoryItems', JSON.stringify(items));
+        resetInputs();
+    }
+
+    function resetInputs() {
+        document.getElementById('itemImage').value = '';
+        document.getElementById('itemName').value = '';
+        document.getElementById('itemObservation').value = '';
+    }
+
+    function toggleInventory() {
+        const inventory = document.getElementById('inventory');
+        inventory.innerHTML = ''; // Limpa a lista antes de preencher
+
+        if (inventory.style.display === 'none') {
+            items.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'item';
+
+                const img = document.createElement('img');
+                img.src = item.image;
+                itemDiv.appendChild(img);
+
+                const name = document.createElement('h3');
+                name.textContent = item.name;
+                itemDiv.appendChild(name);
+
+                const observation = document.createElement('p');
+                observation.textContent = item.observation;
+                itemDiv.appendChild(observation);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Excluir';
+                deleteButton.className = 'delete-button';
+                deleteButton.onclick = () => deleteItem(index);
+                itemDiv.appendChild(deleteButton);
+
+                inventory.appendChild(itemDiv);
+            });
+            inventory.style.display = 'block';
+        } else {
+            inventory.style.display = 'none';
+        }
+    }
+
+    function deleteItem(index) {
+        items.splice(index, 1);
+        localStorage.setItem('inventoryItems', JSON.stringify(items)); // Atualiza o localStorage
+        toggleInventory(); // Atualiza a lista
+        toggleInventory(); // Chama novamente para re-renderizar
+    }
+
+    // Ao carregar a página, mostra os itens já salvos
+    window.onload = () => {
+        if (items.length > 0) {
+            document.getElementById('inventoryContainer').classList.remove('hidden');
+            document.getElementById('loginContainer').classList.add('hidden');
+        }
+    };
+</script>
+
+</body>
+</html>
+
